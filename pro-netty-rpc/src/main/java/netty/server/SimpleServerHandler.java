@@ -1,19 +1,23 @@
 package netty.server;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
 
-public class SimpleServerHandler extends ChannelInboundHandlerAdapter {
+public class SimpleServerHandler extends SimpleChannelInboundHandler<String> {
+
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        String response = "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: text/plain; charset=UTF-8\r\n" +
-                "Content-Length: 2\r\n" +
-                "Connection: close\r\n" +
-                "\r\n" +
-                "OK";
+    protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+        System.out.println("[Server] Received message from client: " + msg);
+        
+        String response = "OK\r\n";
+        System.out.println("[Server] Sending response: " + response);
+        ctx.writeAndFlush(response);
+    }
 
-        ctx.channel().writeAndFlush(response);
-        ctx.channel().close();
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        System.err.println("[Server] Exception caught: " + cause.getMessage());
+        cause.printStackTrace();
+        ctx.close();
     }
 }
