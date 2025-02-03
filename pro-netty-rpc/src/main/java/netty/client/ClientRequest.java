@@ -4,16 +4,16 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ClientRequest {
     private final long id;
-    private Object content;
-    private final AtomicLong aid = new AtomicLong(1);
+    private final Object content;
+    private static final AtomicLong ID_GENERATOR = new AtomicLong(1);
 
-    public ClientRequest(Object request) {
-        this.id = aid.getAndIncrement();
-        this.content = request;
+    public ClientRequest(Object content) {
+        this.id = ID_GENERATOR.getAndIncrement();
+        this.content = content;
     }
 
     public long getId() {
-        return id; 
+        return id;
     }
 
     public Object getContent() {

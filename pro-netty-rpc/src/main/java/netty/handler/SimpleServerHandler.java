@@ -1,19 +1,30 @@
 package netty.handler;
 
 
+import com.alibaba.fastjson.JSONObject;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import netty.client.Response;
+import netty.client.TcpClient;
+import netty.handler.param.ServerRequest;
 
 public class SimpleServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         System.out.println("[Server] Received message from client: " + msg);
+//        ctx.writeAndFlush("OK\r\n");
+//        System.out.println("[Server] Send response to client");
 
-        String response = "OK\r\n";
-        System.out.println("[Server] Sending response: " + response);
-        ctx.writeAndFlush(response);
+        ServerRequest request = JSONObject.parseObject(msg.toString(), ServerRequest.class);
+
+        Response response = new Response();
+        response.setId(request.getId());
+        response.setResult("OK");
+
+        ctx.writeAndFlush(JSONObject.toJSONString(response));
+        ctx.writeAndFlush("\r\n");
     }
 
     @Override
@@ -30,7 +41,7 @@ public class SimpleServerHandler extends ChannelInboundHandlerAdapter {
             }
             else if (event.state() == IdleState.ALL_IDLE) {
                 System.out.println("[Server] All idle, sending ping");
-                ctx.writeAndFlush("ping\r\n");
+                TcpClient.send("ping");
             }
         }
         super.userEventTriggered(ctx, evt);

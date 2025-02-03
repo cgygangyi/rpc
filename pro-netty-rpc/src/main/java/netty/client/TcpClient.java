@@ -1,5 +1,6 @@
 package netty.client;
 
+import com.alibaba.fastjson.JSONObject;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -13,6 +14,7 @@ import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import netty.handler.SimpleClientHandler;
+import io.netty.channel.Channel;
 
 public class TcpClient {
     static final Bootstrap b = new Bootstrap();
@@ -31,14 +33,28 @@ public class TcpClient {
                     }
                 });
         try {
-            ChannelFuture f = b.connect("localhost", 8080).sync();
+            f = b.connect("localhost", 8080).sync();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static Object send(ClientRequest request) {
+    public static Response send(Object content) {
+        ClientRequest request = new ClientRequest(content);
         DefaultFuture future = new DefaultFuture(request);
-        return f.channel().attr(AttributeKey.valueOf("msg")).get();
+        
+        try {
+            f.channel().writeAndFlush(JSONObject.toJSONString(request));
+            f.channel().writeAndFlush("\r\n");
+            
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send request", e);
+        }
+    }
+
+    public static void main(String[] args) {
+        Response response = TcpClient.send("Hello Server!");
+        System.out.println("Got response: " + response.getResult());
     }
 }

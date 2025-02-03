@@ -1,7 +1,10 @@
 package netty.handler;
 
+import com.alibaba.fastjson.JSONObject;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import netty.client.DefaultFuture;
+import netty.client.Response;
 
 public class SimpleClientHandler extends SimpleChannelInboundHandler<String> {
 
@@ -13,6 +16,9 @@ public class SimpleClientHandler extends SimpleChannelInboundHandler<String> {
             return;
         }
         System.out.println("[Client] Received message from server: " + msg);
+        Response response = JSONObject.parseObject(msg, Response.class);
+        DefaultFuture.received(response);
+
         // ctx.close();
     }
 
