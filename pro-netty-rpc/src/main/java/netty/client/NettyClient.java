@@ -14,6 +14,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.logging.LogLevel;
+import netty.handler.SimpleClientHandler;
 
 public class NettyClient {
     public static void main(String[] args) throws Exception {
@@ -32,8 +33,6 @@ public class NettyClient {
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            System.out.println("[Client] Initializing channel pipeline...");
-                            ch.pipeline().addLast(new LoggingHandler(LogLevel.INFO));
                             ch.pipeline().addLast(new StringEncoder());
                             ch.pipeline().addLast(new DelimiterBasedFrameDecoder(65535, Delimiters.lineDelimiter()));
                             ch.pipeline().addLast(new StringDecoder());

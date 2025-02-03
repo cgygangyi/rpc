@@ -1,4 +1,4 @@
-package netty.client;
+package netty.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -7,8 +7,15 @@ public class SimpleClientHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+        if (msg.equals("ping")) {
+            System.out.println("[Client] Received ping from server");
+            ctx.writeAndFlush("pong\r\n");
+            return;
+        }
         System.out.println("[Client] Received message from server: " + msg);
+        // ctx.close();
     }
+
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
