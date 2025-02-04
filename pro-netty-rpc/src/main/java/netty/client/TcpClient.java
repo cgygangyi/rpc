@@ -14,7 +14,7 @@ import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import netty.handler.SimpleClientHandler;
-import io.netty.channel.Channel;
+import netty.utils.Response;
 
 public class TcpClient {
     static final Bootstrap b = new Bootstrap();
@@ -40,13 +40,17 @@ public class TcpClient {
     }
 
     public static Response send(Object content) {
-        ClientRequest request = new ClientRequest(content);
-        DefaultFuture future = new DefaultFuture(request);
+        ClientRequest request;
+        if (content instanceof ClientRequest) {
+            request = (ClientRequest) content;
+        } else {
+            request = new ClientRequest(content);
+        }
         
+        DefaultFuture future = new DefaultFuture(request);
         try {
             f.channel().writeAndFlush(JSONObject.toJSONString(request));
             f.channel().writeAndFlush("\r\n");
-            
             return future.get();
         } catch (Exception e) {
             throw new RuntimeException("Failed to send request", e);
@@ -55,6 +59,6 @@ public class TcpClient {
 
     public static void main(String[] args) {
         Response response = TcpClient.send("Hello Server!");
-        System.out.println("Got response: " + response.getResult());
+        System.out.println("Got response: " + response.getContent());
     }
 }

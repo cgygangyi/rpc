@@ -3,7 +3,11 @@ package netty.user.controllor;
 import javax.annotation.Resource;
 import netty.user.bean.User;
 import netty.user.service.UserService;
+import netty.utils.Response;
+import netty.utils.ResponseUtil;
 import org.springframework.stereotype.Controller;
+
+import java.util.List;
 
 @Controller
 public class UserController {
@@ -11,16 +15,24 @@ public class UserController {
     @Resource
     private UserService userService;
 
-    public void saveUser(User user) {
+    public Response saveUser(User user) {
         System.out.println("Saving user: " + user);
         userService.saveUSer(user);
+        return ResponseUtil.setSuccessResponse(user);
     }
 
-    public String getNameById(Integer id) {
+    public Response saveUsers(List<User> users) {
+        System.out.println("Saving users: " + users);
+        userService.saveUsers(users);
+        return ResponseUtil.setSuccessResponse(users);
+    }
+
+    public Response getNameById(Integer id) {
         System.out.println("Getting name for id: " + id);
+
         if (id == null) {
-            return "Invalid ID";
+            return ResponseUtil.setErrorResponse("Invalid ID");
         }
-        return "User name for ID " + id;
+        return ResponseUtil.setSuccessResponse("User name for ID " + id);
     }
 }

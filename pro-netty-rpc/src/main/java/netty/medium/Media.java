@@ -2,6 +2,8 @@ package netty.medium;
 
 import com.alibaba.fastjson.JSONObject;
 import netty.handler.param.ServerRequest;
+import netty.utils.Response;
+import netty.utils.ResponseUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,18 +31,31 @@ public class Media {
         return beanMap.get(beanName);
     }
 
-    public Object process(ServerRequest request) throws InvocationTargetException, IllegalAccessException {
-        String command = request.getCommand();
-        BeanMethod beanMethod = beanMap.get(command);
-        if (beanMethod == null) {
-            throw new RuntimeException("Command not found: " + command);
-        }
-        Object bean = beanMethod.getBean();
-        Method method = beanMethod.getMethod();
-        Class parameterType = method.getParameterTypes()[0];
-        Object content = request.getContent();
+    public Response process(ServerRequest request) {
+        Response response = new Response();
+        try {
+            String command = request.getCommand();
+            BeanMethod beanMethod = beanMap.get(command);
+            if (beanMethod == null) {
+                response = ResponseUtil.setErrorResponse("Command not found: " + command);
+                response.setId(request.getId());
+                return response;
+            }
+
+            Object bean = beanMethod.getBean();
+            Method method = beanMethod.getMethod();
+            Class parameterType = method.getParameterTypes()[0];
+            Object content = request.getContent();
         
-        Object args = JSONObject.parseObject(content.toString(), parameterType);
-        return method.invoke(bean, args);
+            Object args = JSONObject.parseObject(content.toString(), parameterType);
+            response = (Response) method.invoke(bean, args);
+            response.setId(request.getId());
+            
+            return response;
+        } catch (Exception e) {
+            response = ResponseUtil.setErrorResponse(e.getMessage());
+            response.setId(request.getId());
+            return response;
+        }
     }
 }

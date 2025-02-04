@@ -6,7 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import netty.client.Response;
+import netty.utils.Response;
 import netty.client.TcpClient;
 import netty.handler.param.ServerRequest;
 
@@ -21,7 +21,7 @@ public class SimpleServerHandler extends ChannelInboundHandlerAdapter {
 
         Response response = new Response();
         response.setId(request.getId());
-        response.setResult("OK");
+        response.setContent("OK");
 
         ctx.writeAndFlush(JSONObject.toJSONString(response));
         ctx.writeAndFlush("\r\n");

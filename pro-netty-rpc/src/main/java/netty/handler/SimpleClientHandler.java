@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import netty.client.DefaultFuture;
-import netty.client.Response;
+import netty.utils.Response;
 
 public class SimpleClientHandler extends SimpleChannelInboundHandler<String> {
 

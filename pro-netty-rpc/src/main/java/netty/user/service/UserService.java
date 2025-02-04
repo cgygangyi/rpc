@@ -13,8 +13,7 @@ public class UserService {
 
     }
 
-    public void saveUSerList(List<User> userlist) {
-
+    public void saveUsers(List<User> users) {
+        
     }
-
 }
