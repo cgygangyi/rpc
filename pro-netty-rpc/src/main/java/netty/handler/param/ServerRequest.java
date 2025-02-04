@@ -3,6 +3,16 @@ package netty.handler.param;
 public class ServerRequest {
     private Long id;
     private Object content;
+    private String command;
+
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
 
     public Long getId() {
         return id;
