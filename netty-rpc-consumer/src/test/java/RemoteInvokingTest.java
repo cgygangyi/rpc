@@ -1,17 +1,16 @@
-import client.annotation.RemoteInvoke;
-import client.core.param.Response;
-import client.user.bean.User;
-import client.user.remote.UserRemote;
+import annotation.RemoteInvoke;
+import remote.UserRemote;
+import utils.Response;
+import bean.User;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes=RemoteInvokingTest.class)
-@ComponentScan("client")
+@ComponentScan("\\")
 public class RemoteInvokingTest {
 
     @RemoteInvoke
