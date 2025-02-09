@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 import annotation.RemoteInvoke;
 import core.ClientRequest;
-import core.TcpClient;
+import core.NettyClient;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cglib.proxy.Enhancer;
@@ -70,7 +70,7 @@ public class InvokeProxy implements BeanPostProcessor {
             System.out.println("[Proxy] Created request with command: " + className);
             System.out.println("[Proxy] Request ID: " + request.getId());
             
-            Response response = TcpClient.send(request);
+            Response response = NettyClient.send(request);
             System.out.println("[Proxy] Received response for request ID: " + response.getId());
             
             return response;

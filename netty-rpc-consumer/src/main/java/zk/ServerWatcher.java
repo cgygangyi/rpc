@@ -2,13 +2,11 @@ package zk;
 
 import core.ChannelManager;
 import core.NettyClient;
-import core.TcpClient;
 import factory.ZooKeeperFactory;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.zookeeper.WatchedEvent;
 import io.netty.channel.ChannelFuture;
-import constant.Constants;
 
 import java.util.List;
 
@@ -17,18 +15,15 @@ public class ServerWatcher implements CuratorWatcher {
     public void processServerList(List<String> serverPaths) {
         System.out.println("Processing server list: " + serverPaths);
         
-        ChannelManager.realServerPath.clear();
-        for(String serverInfo : serverPaths){
-            ChannelManager.realServerPath.add(serverInfo);
-        }
-
-        ChannelManager.clearChnannel();
-        for(String realServer : ChannelManager.realServerPath){
-            String[] str = realServer.split("#");
-            if (str.length == 2) {
-                System.out.println("Connecting to server: " + str[0] + ":" + str[1]);
-                ChannelFuture channelFuture = NettyClient.b.connect(str[0], Integer.valueOf(str[1]));
-                ChannelManager.addChnannel(channelFuture);
+        ChannelManager.clear();
+        
+        for(String serverInfo : serverPaths) {
+            String[] parts = serverInfo.split("#");
+            if (parts.length == 3) {
+                String host = parts[0];
+                int port = Integer.parseInt(parts[1]);
+                ChannelFuture channelFuture = NettyClient.b.connect(host, port);
+                ChannelManager.addServer(serverInfo, channelFuture);
             }
         }
     }

@@ -77,13 +77,15 @@ public class NettyInitial implements ApplicationListener<ContextRefreshedEvent> 
 
             try {
                 CuratorFramework client = ZooKeeperFactory.getClient();
-                String serverInfo = InetAddress.getLocalHost().getHostAddress() + "#" + port;
-                String path = Constants.SERVER_PATH + "/" + serverInfo;
+                String serverPath = Constants.SERVER_PATH + "/" + 
+                    InetAddress.getLocalHost().getHostAddress() + "#" + 
+                    port + "#" + 
+                    getServerWeight();
                 client.create()
                         .creatingParentsIfNeeded()
                         .withMode(CreateMode.EPHEMERAL)
-                        .forPath(path);
-                System.out.println("[Server] Registered with ZooKeeper at path: " + path);
+                        .forPath(serverPath);
+                System.out.println("[Server] Registered with ZooKeeper at path: " + serverPath);
             } catch (Exception zkEx) {
                 System.err.println("[Server] ZooKeeper registration failed: " + zkEx.getMessage());
             }
@@ -95,5 +97,10 @@ public class NettyInitial implements ApplicationListener<ContextRefreshedEvent> 
             parentLoop.shutdownGracefully();
             childLoop.shutdownGracefully();
         }
+    }
+
+    private int getServerWeight() {
+        // get the number of cores as the weight
+        return Runtime.getRuntime().availableProcessors();
     }
 }

@@ -60,7 +60,7 @@ public class NettyClient {
 
 
     public static Response send(ClientRequest request) {
-        ChannelFuture channelFuture = ChannelManager.get(ChannelManager.position);
+        ChannelFuture channelFuture = ChannelManager.get();
         if (channelFuture == null) {
             throw new RuntimeException("No available server connection");
         }
@@ -77,8 +77,11 @@ public class NettyClient {
     }
 
     public static void main(String[] args) {
-        ClientRequest clientRequest = new ClientRequest("Hello Server!");
-        Response response = NettyClient.send(clientRequest);
-        System.out.println("Got response: " + response.getContent());
+        for (int i = 0; i < 10; i++) {
+            ClientRequest clientRequest = new ClientRequest("Hello Server!");
+            Response response = NettyClient.send(clientRequest);
+            System.out.println("Got response: " + response.getContent());
+        }
+
     }
 }
