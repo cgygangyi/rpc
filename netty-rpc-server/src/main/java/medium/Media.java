@@ -2,7 +2,8 @@ package medium;
 
 import com.alibaba.fastjson.JSONObject;
 import handler.param.ServerRequest;
-import utils.Response;
+import protocal.Request;
+import protocal.Response;
 import utils.ResponseUtil;
 
 import java.lang.reflect.Method;
@@ -30,7 +31,7 @@ public class Media {
         return beanMap.get(beanName);
     }
 
-    public Response process(ServerRequest request) {
+    public Response process(Request request) {
         Response response = new Response();
         try {
             String command = request.getCommand();

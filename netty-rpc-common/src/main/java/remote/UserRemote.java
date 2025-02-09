@@ -1,7 +1,7 @@
 package remote;
 
 
-import utils.Response;
+import protocal.Response;
 import bean.User;
 
 import java.util.List;

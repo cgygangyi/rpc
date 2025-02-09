@@ -4,7 +4,7 @@ import annotation.Remote;
 import bean.User;
 import remote.UserRemote;
 import user.service.UserService;
-import utils.Response;
+import protocal.Response;
 import utils.ResponseUtil;
 
 import javax.annotation.Resource;

@@ -1,31 +1,36 @@
 package handler;
 
+import core.ClientRequest;
 import core.DefaultFuture;
 import com.alibaba.fastjson.JSONObject;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import utils.Response;
+import protocal.Request;
+import protocal.Response;
 
 
 public class SimpleClientHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
-        System.out.println("[Client Handler] Received raw message: '" + msg + "'");
-        
-        if (msg.equals("ping")) {
-            System.out.println("[Client Handler] Received ping from server");
-            ctx.writeAndFlush("pong\r\n");
-            return;
-        }
-        
+        String message = msg.toString();
+        System.out.println("[Server Handler] Received message: " + message);
+
         try {
             Response response = JSONObject.parseObject(msg, Response.class);
-            System.out.println("[Client Handler] Parsed response with ID: " + response.getId());
-            DefaultFuture.received(response);
+            if (response.getContent().equals("ping")) {
+                System.out.println("[Client Handler] Received ping from server");
+                Response pongResponse = new Response();
+                pongResponse.setId(0L);
+                pongResponse.setContent("pong");
+                ctx.writeAndFlush(JSONObject.toJSONString(pongResponse) + "\r\n");
+            }
+            else {
+                DefaultFuture.received(response);
+            }
         } catch (Exception e) {
-            System.err.println("[Client Handler] Error parsing response: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[Server Handler] Failed to parse message: " + e.getMessage());
+            ctx.writeAndFlush("Error: Invalid message format\r\n");
         }
     }
 

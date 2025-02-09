@@ -1,5 +1,8 @@
 package core;
 
+import com.alibaba.fastjson.JSONObject;
+import constant.Constants;
+import factory.ZooKeeperFactory;
 import handler.SimpleClientHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -13,46 +16,69 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import org.apache.curator.framework.CuratorFramework;
+import protocal.Response;
+import zk.ServerWatcher;
 
+import java.util.List;
 
 public class NettyClient {
-    public static void main(String[] args) throws Exception {
-        System.out.println("[Client] Starting client initialization...");
-        String host = "localhost";
-        int port = 8080;
+    public static final Bootstrap b = new Bootstrap();
+    private static ChannelFuture f;
+    
+    static {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
+        b.group(workerGroup)
+         .channel(NioSocketChannel.class)
+         .option(ChannelOption.SO_KEEPALIVE, true)
+         .handler(new ChannelInitializer<SocketChannel>() {
+             @Override
+             public void initChannel(SocketChannel ch) throws Exception {
+                 ch.pipeline().addLast(new StringEncoder());
+                 ch.pipeline().addLast(new DelimiterBasedFrameDecoder(65535, Delimiters.lineDelimiter()));
+                 ch.pipeline().addLast(new StringDecoder());
+                 ch.pipeline().addLast(new SimpleClientHandler());
+             }
+         });
 
         try {
-            Bootstrap b = new Bootstrap();
-            System.out.println("[Client] Configuring client bootstrap...");
-
-            b.group(workerGroup)
-                    .channel(NioSocketChannel.class)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new StringEncoder());
-                            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(65535, Delimiters.lineDelimiter()));
-                            ch.pipeline().addLast(new StringDecoder());
-                            ch.pipeline().addLast(new SimpleClientHandler());
-                        }
-                    });
-
-            System.out.println("[Client] Connecting to server at " + host + ":" + port);
-            ChannelFuture f = b.connect(host, port).sync();
-
-            System.out.println("[Client] Connected to server, sending message...");
-            f.channel().writeAndFlush("Hello server\r\n");
-            System.out.println("[Client] Message sent, waiting for response...");
-
-            f.channel().closeFuture().sync();
+            CuratorFramework client = ZooKeeperFactory.getClient();
+            ServerWatcher watcher = new ServerWatcher();
+            
+            List<String> servers = client.getChildren().forPath(Constants.SERVER_PATH);
+            if (!servers.isEmpty()) {
+                watcher.processServerList(servers);
+            }
+            
+            client.getChildren().usingWatcher(watcher).forPath(Constants.SERVER_PATH);
+            System.out.println("[NettyClient] ZooKeeper watcher registered");
         } catch (Exception e) {
-            System.err.println("[Client] Error occurred: " + e.getMessage());
+            System.err.println("[NettyClient] Failed to register ZooKeeper watcher: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            System.out.println("[Client] Shutting down client...");
-            workerGroup.shutdownGracefully();
         }
+    }
+
+
+    public static Response send(ClientRequest request) {
+        ChannelFuture channelFuture = ChannelManager.get(ChannelManager.position);
+        if (channelFuture == null) {
+            throw new RuntimeException("No available server connection");
+        }
+
+        DefaultFuture future = new DefaultFuture(request);
+
+        try {
+            String message = JSONObject.toJSONString(request) + "\r\n";
+            channelFuture.channel().writeAndFlush(message);
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send request", e);
+        }
+    }
+
+    public static void main(String[] args) {
+        ClientRequest clientRequest = new ClientRequest("Hello Server!");
+        Response response = NettyClient.send(clientRequest);
+        System.out.println("Got response: " + response.getContent());
     }
 }

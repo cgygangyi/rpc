@@ -1,5 +1,7 @@
 package utils;
 
+import protocal.Response;
+
 public class ResponseUtil {
     public static final String SUCCESS = "success";
     public static final String ERROR = "error";

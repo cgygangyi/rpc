@@ -22,39 +22,63 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.concurrent.TimeUnit;
 
 @Component
 public class NettyInitial implements ApplicationListener<ContextRefreshedEvent> {
+    
+    private static final int MIN_PORT = 8080;
+    private static final int MAX_PORT = 8090; // 设置最大尝试端口
+
+    private int findAvailablePort() {
+        for (int port = MIN_PORT; port <= MAX_PORT; port++) {
+            try {
+                // 尝试绑定端口
+                new ServerSocket(port).close();
+                System.out.println("Found available port: " + port);
+                return port;
+            } catch (IOException e) {
+                System.out.println("Port " + port + " is in use, trying next port");
+                continue;
+            }
+        }
+        throw new RuntimeException("No available port found between " + MIN_PORT + " and " + MAX_PORT);
+    }
+
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         EventLoopGroup parentLoop = new NioEventLoopGroup();
         EventLoopGroup childLoop = new NioEventLoopGroup();
 
         try {
+            int port = findAvailablePort();
+            
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(parentLoop, childLoop)
-                     .option(ChannelOption.SO_BACKLOG, 128)
-                     .childOption(ChannelOption.SO_KEEPALIVE, false)
-                     .channel(NioServerSocketChannel.class)
-                     .childHandler(new ChannelInitializer<SocketChannel>() {
-                         @Override
-                         public void initChannel(SocketChannel ch) throws Exception {
-                             ch.pipeline().addLast(new StringDecoder());
-                             ch.pipeline().addLast(new DelimiterBasedFrameDecoder(65535, Delimiters.lineDelimiter()));
-                             ch.pipeline().addLast(new StringEncoder());
-                             ch.pipeline().addLast(new IdleStateHandler(60, 45, 20, TimeUnit.SECONDS));
-                             ch.pipeline().addLast(new ServerHandler());
-                         }
-                     });
+                    .option(ChannelOption.SO_BACKLOG, 128)
+                    .childOption(ChannelOption.SO_KEEPALIVE, false)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new StringDecoder());
+                            ch.pipeline().addLast(new DelimiterBasedFrameDecoder(65535, Delimiters.lineDelimiter()));
+                            ch.pipeline().addLast(new StringEncoder());
+                            ch.pipeline().addLast(new IdleStateHandler(60, 45, 20, TimeUnit.SECONDS));
+                            ch.pipeline().addLast(new ServerHandler());
+                        }
+                    });
 
-            System.out.println("[Server] Server is starting...");
-            ChannelFuture f = bootstrap.bind(8080).sync();
+            System.out.println("[Server] Server is starting on port " + port);
+            ChannelFuture f = bootstrap.bind(port).sync();
 
             try {
                 CuratorFramework client = ZooKeeperFactory.getClient();
-                String path = Constants.SERVER_PATH + InetAddress.getLocalHost().getHostAddress();
+                String serverInfo = InetAddress.getLocalHost().getHostAddress() + "#" + port;
+                String path = Constants.SERVER_PATH + "/" + serverInfo;
                 client.create()
                         .creatingParentsIfNeeded()
                         .withMode(CreateMode.EPHEMERAL)
@@ -64,13 +88,10 @@ public class NettyInitial implements ApplicationListener<ContextRefreshedEvent> 
                 System.err.println("[Server] ZooKeeper registration failed: " + zkEx.getMessage());
             }
 
-            System.out.println("[Server] Server started and listening on port 8080");
             f.channel().closeFuture().sync();
         } catch (Exception e) {
-            System.err.println("[Server] Exception occurred: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            System.out.println("[Server] Shutting down server...");
             parentLoop.shutdownGracefully();
             childLoop.shutdownGracefully();
         }

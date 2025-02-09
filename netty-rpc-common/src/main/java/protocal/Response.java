@@ -1,4 +1,4 @@
-package utils;
+package protocal;
 
 public class Response {
     private Long id;

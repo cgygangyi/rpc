@@ -3,7 +3,7 @@ package user.controllor;
 import javax.annotation.Resource;
 import bean.User;
 import user.service.UserService;
-import utils.Response;
+import protocal.Response;
 import utils.ResponseUtil;
 import org.springframework.stereotype.Controller;
 

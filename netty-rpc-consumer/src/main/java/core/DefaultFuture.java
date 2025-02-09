@@ -1,6 +1,6 @@
 package core;
 
-import utils.Response;
+import protocal.Response;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Condition;

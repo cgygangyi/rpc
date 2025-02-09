@@ -1,6 +1,6 @@
 import annotation.RemoteInvoke;
 import remote.UserRemote;
-import utils.Response;
+import protocal.Response;
 import bean.User;
 import org.junit.Test;
 import org.junit.runner.RunWith;

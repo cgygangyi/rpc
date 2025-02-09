@@ -12,7 +12,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.stereotype.Component;
-import utils.Response;
+import protocal.Response;
 
 @Component
 public class InvokeProxy implements BeanPostProcessor {
